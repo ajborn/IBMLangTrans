@@ -15,12 +15,12 @@ var question = [
   {
     type: 'input',
     name: 'getpath',
-    message: 'Enter a file path to translate'
+    message: 'Enter a text file path to translate: '
   },
   {
     type: 'input',
     name: 'lang',
-    message: 'Enter a lanuage code for translation EX: en-fr, en-af'
+    message: 'Enter a lanuage code for translation EX: en-fr, en-af: '
   }
 ]
 
@@ -40,7 +40,6 @@ program
         version: '2018-05-01',
         iam_apikey: iamApiKey
       });
-      console.log("response.lang: ", response.lang);
       var parameters = {
         text: response.getword,
         model_id: response.lang
@@ -91,7 +90,7 @@ program
     );
   })
 
-var ReadFile = function (filePat, lang) {
+var ReadFile = function (filePath, lang) {
   fs.readFile(filePath, { encoding: 'utf-8' }, function (err, data) {
     if (!err) {
       var wordsToTranslate = data.split('\r\n');
@@ -100,8 +99,6 @@ var ReadFile = function (filePat, lang) {
         text: wordsToTranslate,
         model_id: lang
       };
-      console.log("lang: ", lang);
-
       languageTranslator.translate(
         parameters,
         function (error, response) {
@@ -115,8 +112,7 @@ var ReadFile = function (filePat, lang) {
               if (err) {
                 return console.log(err);
               }
-
-              console.log("The file was saved!");
+              console.log("Translations saved to C:\Users\Default\Documents\Translated.txt.");
             });
             console.log("translated: ", translated);
           }
