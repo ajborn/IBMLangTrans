@@ -3,6 +3,7 @@ var fs = require('fs');
 var inquirer = require('inquirer');
 var program = require('commander');
 var LanguageTranslatorV3 = require('watson-developer-cloud/language-translator/v3');
+var LanguageTranslatorV2 = require('watson-developer-cloud/language-translator/v2');
 
 const iamApiKey = '3S6Yshpwn6Xf2hMepnbyOsBd-a3K8CYjkQVTMb85_L2a'
 var prompt = inquirer.createPromptModule();
@@ -10,11 +11,18 @@ var prompt = inquirer.createPromptModule();
 program
   .version('0.2.0')
 
-var question = [{
-  type: 'input',
-  name: 'getpath',
-  message: 'Enter a file path to translate'
-}]
+var question = [
+  {
+    type: 'input',
+    name: 'getpath',
+    message: 'Enter a file path to translate'
+  },
+  {
+    type: 'input',
+    name: 'lang',
+    message: 'Enter a lanuage code for translation EX: en-fr, en-af'
+  }
+]
 
 var question2 = [{
   type: 'input',
@@ -23,29 +31,19 @@ var question2 = [{
 }]
 
 program
-  .command('start')
-  .alias('s')
-  .description('Enter a file path to translate')
-  .action(() => {
-    prompt(question).then((response) => {
-      console.log("response:", response)
-    })
-  })
-
-program
   .command('translate')
   .alias('t')
-  .description('Enter a file path to translate')
+  .description('Enter a single word to translate')
   .action(() => {
     prompt(question2).then((response) => {
       var languageTranslator = new LanguageTranslatorV3({
         version: '2018-05-01',
         iam_apikey: iamApiKey
       });
-
+      console.log("response.lang: ", response.lang);
       var parameters = {
         text: response.getword,
-        model_id: 'en-fr'
+        model_id: response.lang
       };
 
       languageTranslator.translate(
@@ -66,45 +64,65 @@ program
 program
   .command('file')
   .alias('f')
-  .description('path')
+  .description('Enter a filepath to process translations')
   .action(() => {
     prompt(question).then((response) => {
-      ReadFile(response.getpath)
+      ReadFile(response.getpath, response.lang)
     })
   })
 
-var ReadFile = function (filePath) {
+program
+  .command('lanuages')
+  .alias('l')
+  .description('Get all language codes')
+  .action(() => {
+    var languageTranslator = new LanguageTranslatorV3({
+      version: '2018-05-01',
+      iam_apikey: iamApiKey
+    });
+    languageTranslator.listIdentifiableLanguages(
+      {},
+      function (err, response) {
+        if (err)
+          console.log(err)
+        else
+          console.log(JSON.stringify(response, null, 2));
+      }
+    );
+  })
+
+var ReadFile = function (filePat, lang) {
   fs.readFile(filePath, { encoding: 'utf-8' }, function (err, data) {
     if (!err) {
       var wordsToTranslate = data.split('\r\n');
       var translated = [];
-        console.log("wordsToTranslate: ", wordsToTranslate);
-        var parameters = {
-          text: wordsToTranslate,
-          model_id: 'en-fr'
-        };
-  
-        languageTranslator.translate(
-          parameters,
-          function (error, response) {
-            if (error) {
-              console.log(error)
-            } else {
-              for(var i = 0;i < response.translations.length; i++){
-                  translated.push(wordsToTranslate[i] + ":" + response.translations[i].translation);
-              }
-              fs.writeFile("C:\\Users\\Default\\Documents\\Translated.txt", translated.toString(), function(err) {
-                if(err) {
-                    return console.log(err);
-                }
-            
-                console.log("The file was saved!");
-            }); 
-              console.log("translated: ", translated);
+      var parameters = {
+        text: wordsToTranslate,
+        model_id: lang
+      };
+      console.log("lang: ", lang);
+
+      languageTranslator.translate(
+        parameters,
+        function (error, response) {
+          if (error) {
+            console.log(error)
+          } else {
+            for (var i = 0; i < response.translations.length; i++) {
+              translated.push(wordsToTranslate[i] + ":" + response.translations[i].translation);
             }
+            fs.writeFile("C:\\Users\\Default\\Documents\\Translated.txt", translated.toString(), function (err) {
+              if (err) {
+                return console.log(err);
+              }
+
+              console.log("The file was saved!");
+            });
+            console.log("translated: ", translated);
           }
-        );
-      
+        }
+      );
+
     } else {
       console.log(err);
     }
