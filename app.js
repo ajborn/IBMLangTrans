@@ -1,9 +1,9 @@
 #!/usr/bin/env node
+var os = require('os');
 var fs = require('fs');
 var inquirer = require('inquirer');
 var program = require('commander');
 var LanguageTranslatorV3 = require('watson-developer-cloud/language-translator/v3');
-var LanguageTranslatorV2 = require('watson-developer-cloud/language-translator/v2');
 
 const iamApiKey = '3S6Yshpwn6Xf2hMepnbyOsBd-a3K8CYjkQVTMb85_L2a'
 var prompt = inquirer.createPromptModule();
@@ -106,7 +106,16 @@ var ReadFile = function (filePath, lang) {
             console.log(error)
           } else {
             for (var i = 0; i < response.translations.length; i++) {
-              translated.push(wordsToTranslate[i] + ":" + response.translations[i].translation);
+              translated.push(wordsToTranslate[i] + ":" + wordsToTranslate[i].translation + os.EOL);
+            }
+            fs.writeFile("C:\\Users\\Default\\Documents\\UnTranslated.txt", translated.toString(), function (err) {
+              if (err) {
+                return console.log(err);
+              }
+              console.log("Translations saved to C:\Users\Default\Documents\Translated.txt.");
+            });
+            for (var i = 0; i < response.translations.length; i++) {
+              translated.push(wordsToTranslate[i] + ":" + response.translations[i].translation + os.EOL);
             }
             fs.writeFile("C:\\Users\\Default\\Documents\\Translated.txt", translated.toString(), function (err) {
               if (err) {
